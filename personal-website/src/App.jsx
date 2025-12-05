@@ -1,8 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 
 function App() {
   const [activeTab, setActiveTab] = useState('about');
+  const [theme, setTheme] = useState('dark');
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prevTheme) => (prevTheme === 'dark' ? 'light' : 'dark'));
+  };
 
   return (
     <div className="app-container">
@@ -21,7 +30,16 @@ function App() {
           >
             Projects
           </button>
+          <button
+            className={`nav-button ${activeTab === 'online' ? 'active' : ''}`}
+            onClick={() => setActiveTab('online')}
+          >
+            Online
+          </button>
         </nav>
+        <button className="theme-toggle" onClick={toggleTheme} aria-label="Toggle theme">
+          {theme === 'dark' ? '☀️' : '🌙'}
+        </button>
       </header>
 
       <main className="app-content">
@@ -88,6 +106,22 @@ function App() {
                   <span>MongoDB</span>
                 </div>
               </div>
+            </div>
+          </section>
+        )}
+
+        {activeTab === 'online' && (
+          <section className="online-section fade-in">
+            <h2>Online Presence</h2>
+            <div className="online-list">
+              <a href="https://nonlinearity.info" target="_blank" rel="noopener noreferrer" className="online-card">
+                <h3>Nonlinearity.info</h3>
+                <p>Visit nonlinearity.info</p>
+              </a>
+              <a href="https://grepsilon.com" target="_blank" rel="noopener noreferrer" className="online-card">
+                <h3>Grepsilon.com</h3>
+                <p>Visit grepsilon.com</p>
+              </a>
             </div>
           </section>
         )}
