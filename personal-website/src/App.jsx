@@ -37,9 +37,15 @@ function App() {
             Online
           </button>
         </nav>
-        <button className="theme-toggle" onClick={toggleTheme} aria-label="Toggle theme">
-          {theme === 'dark' ? '☀️' : '🌙'}
-        </button>
+        <div className="theme-toggle-wrapper">
+          <label className="theme-switch" aria-label="Toggle theme">
+            <input type="checkbox" checked={theme === 'light'} onChange={toggleTheme} />
+            <span className="slider round">
+              <span className="icon sun">☀️</span>
+              <span className="icon moon">🌙</span>
+            </span>
+          </label>
+        </div>
       </header>
 
       <main className="app-content">
