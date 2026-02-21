@@ -1,4 +1,4 @@
-url: "https://leventkaya.com"       # production domain, no trailing slash
+url: "https://grepsilon.com"       # production domain, no trailing slash
 baseurl: ""                         # "" for root
 lang: en
 timezone: "Europe/Istanbul"         
@@ -9,14 +9,14 @@ favicon: /assets/images/favicon.png
 
 # Author (single definition)
 author:
-  name: "Levent Kaya"
-  email: leventkayadev@gmail.com
+  name: "Kevin Multani"
+  email: kevinmultani@gmail.com
 
 social:
   - name: "GitHub"
-    url: "https://github.com/lvntky"
+    url: "https://github.com/kvmu"
   - name: "LinkedIn"
-    url: "https://www.linkedin.com/in/levent-kaya/"
+    url: "https://www.linkedin.com/in/kmultani/"
 
 # Theme + plugins
 theme: jekyll-theme-low
@@ -54,6 +54,6 @@ exclude:
   - README.md
 
 # SEO settings - USE ABSOLUTE URLs
-logo: "https://leventkaya.com/assets/images/logo.png"
-image: "https://leventkaya.com/assets/images/logo.png"
-twitter_username: "lvntky"
+# logo: "https://leventkaya.com/assets/images/logo.png"
+# image: "https://leventkaya.com/assets/images/logo.png"
+twitter_username: "multaniply"

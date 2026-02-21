@@ -1,13 +1,10 @@
-<br>
-<center>
-  <div style="display: inline-block; vertical-align: middle;">
-    <a href="{{ '/' | relative_url }}" class="title"><b>{{ site.title | upcase }}</b><br></a>
-    <hr>
-    <div style="text-align: justify; display: inline-block; width: 100%;">
-      <a class="title" href="mailto:{{ site.email | default: 'leventkayadev@gmail.com' }}">CONTACT</a>&nbsp;&nbsp;&nbsp;
-      <a class="title" href="{{ '/archive/' | relative_url }}">ARCHIVE</a>&nbsp;&nbsp;&nbsp;
-      <a class="title" href="{{ site.feed.path | default: '/rss.xml' | relative_url }}">RSS</a>&nbsp;&nbsp;&nbsp;&nbsp;
-    </div>
-  </div>
-</center>
-<br><br>
+<div class="heading grepsilon-cursor">
+  <a href="{{ '/' | relative_url }}">{{ site.title | escape }}</a>
+</div>
+
+<nav>
+  <a href="{{ '/' | relative_url }}">~/home</a>
+  <a href="{{ '/about' | relative_url }}">~/about</a>
+  <a href="{{ '/archive' | relative_url }}">~/archive</a>
+  <a href="{{ '/feed.xml' | relative_url }}">~/rss</a>
+</nav>
