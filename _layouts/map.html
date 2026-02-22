@@ -1,0 +1,254 @@
+---
+layout: default
+---
+
+{%- assign graph_posts = site.posts | where_exp: "p", "p.ref != nil" -%}
+
+{%- assign node_jsons = "" | split: "" -%}
+{%- for post in graph_posts -%}
+  {%- capture n -%}{"id":{{ post.ref | jsonify }},"title":{{ post.title | jsonify }},"url":{{ post.url | relative_url | jsonify }},"category":{{ post.category | default: "uncategorised" | jsonify }}}{%- endcapture -%}
+  {%- assign node_jsons = node_jsons | push: n -%}
+{%- endfor -%}
+
+{%- assign edge_jsons = "" | split: "" -%}
+{%- for post in graph_posts -%}
+  {%- if post.related -%}
+    {%- for target in post.related -%}
+      {%- unless target == blank -%}
+        {%- capture e -%}{"source":{{ post.ref | jsonify }},"target":{{ target | jsonify }}}{%- endcapture -%}
+        {%- assign edge_jsons = edge_jsons | push: e -%}
+      {%- endunless -%}
+    {%- endfor -%}
+  {%- endif -%}
+{%- endfor -%}
+
+<div class="map-container">
+  <div class="heading">{{ page.title }}</div>
+  <hr>
+  <p class="map-desc">Articles and their connections. Hover a node for details — click to open.</p>
+  <svg id="map-svg" aria-label="Article relationship map"></svg>
+  <div id="map-tooltip" class="map-tooltip" aria-hidden="true"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script>
+(function () {
+  'use strict';
+
+  /* ── 1. DATA ─────────────────────────────────────────────────────── */
+
+  var nodes = [{{ node_jsons | join: "," }}];
+  var edges = [{{ edge_jsons | join: "," }}];
+
+  /* ── 2. CATEGORY PALETTE (light-bg) ─────────────────────────────── */
+
+  var PALETTE = {
+    "quantum":       { fill: "#0369a1", label: "#fff" }, /* deep sky   */
+    "datacenter":    { fill: "#6d28d9", label: "#fff" }, /* violet     */
+    "horology":      { fill: "#b45309", label: "#fff" }, /* amber      */
+    "security":      { fill: "#b91c1c", label: "#fff" }, /* red        */
+    "jekyll":        { fill: "#166534", label: "#fff" }, /* forest     */
+    "uncategorised": { fill: "#475569", label: "#fff" }  /* slate      */
+  };
+  var DEFAULT_PAL = PALETTE["uncategorised"];
+
+  function palFor(cat)  { return PALETTE[cat] || DEFAULT_PAL; }
+
+  /* ── 3. DEGREE MAP (for node sizing) ─────────────────────────────── */
+
+  var degree = {};
+  nodes.forEach(function(n){ degree[n.id] = 0; });
+  edges.forEach(function(e){
+    if (degree[e.source] !== undefined) degree[e.source]++;
+    if (degree[e.target] !== undefined) degree[e.target]++;
+  });
+
+  /* ── 4. CONSTANTS ────────────────────────────────────────────────── */
+
+  var R_BASE   = 18;   /* min node radius                    */
+  var R_SCALE  = 4;    /* extra radius per connection        */
+  var LABEL_Y  = 14;   /* label offset below circle edge     */
+  var MAXLAB   = 18;
+
+  function nodeR(d) { return R_BASE + Math.min(degree[d.id] || 0, 4) * R_SCALE; }
+
+  /* ── 5. SVG SETUP ────────────────────────────────────────────────── */
+
+  var container = document.querySelector('.map-container');
+  function W() { return container.clientWidth  || 800; }
+  function H() { return Math.max(Math.min(W() * 0.65, 620), 320); }
+
+  var svg = d3.select('#map-svg')
+              .attr('width',  W())
+              .attr('height', H());
+
+  /* Dot grid + arrowhead */
+  var defs = svg.append('defs');
+
+  defs.append('pattern')
+      .attr('id', 'dots').attr('width', 24).attr('height', 24)
+      .attr('patternUnits', 'userSpaceOnUse')
+    .append('circle')
+      .attr('cx', 1).attr('cy', 1).attr('r', 1)
+      .attr('fill', '#d4d4c8');
+
+  /* White background then dot grid */
+  svg.append('rect').attr('width', '100%').attr('height', '100%').attr('fill', '#fff');
+  svg.append('rect').attr('width', '100%').attr('height', '100%').attr('fill', 'url(#dots)');
+
+  /* Arrowhead */
+  defs.append('marker')
+      .attr('id', 'arrow').attr('viewBox', '0 -5 10 10')
+      .attr('refX', 28).attr('refY', 0)
+      .attr('markerWidth', 5).attr('markerHeight', 5)
+      .attr('orient', 'auto')
+    .append('path')
+      .attr('d', 'M0,-5L10,0L0,5').attr('fill', '#aaa');
+
+  /* ── 6. SIMULATION ───────────────────────────────────────────────── */
+
+  var linkData = edges.map(function(e){
+    return { source: e.source, target: e.target };
+  });
+
+  var sim = d3.forceSimulation(nodes)
+    .force('link',      d3.forceLink(linkData).id(function(d){ return d.id; }).distance(140).strength(0.5))
+    .force('charge',    d3.forceManyBody().strength(-350))
+    .force('center',    d3.forceCenter(W() / 2, H() / 2))
+    .force('collision', d3.forceCollide(function(d){ return nodeR(d) + 20; }))
+    .alphaDecay(0.025);
+
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    sim.stop();
+    for (var i = 0; i < 300; i++) { sim.tick(); }
+  }
+
+  /* ── 7. EDGES ────────────────────────────────────────────────────── */
+
+  var link = svg.append('g').attr('class','map-links')
+    .selectAll('line').data(linkData).join('line')
+      .attr('class','map-link')
+      .attr('marker-end','url(#arrow)');
+
+  /* ── 8. NODES ────────────────────────────────────────────────────── */
+
+  var node = svg.append('g').attr('class','map-nodes')
+    .selectAll('g').data(nodes).join('g')
+      .attr('class','map-node')
+      .call(drag(sim));
+
+  /* Main circle — solid fill */
+  node.append('circle')
+      .attr('class', 'map-node-circle')
+      .attr('r', function(d){ return nodeR(d); })
+      .attr('fill',         function(d){ return palFor(d.category).fill; })
+      .attr('stroke',       '#000')
+      .attr('stroke-width', 1);
+
+  /* Two-word label below circle */
+  node.append('text')
+      .attr('class', 'map-node-sublabel')
+      .attr('dy', function(d){ return nodeR(d) + LABEL_Y; })
+      .attr('text-anchor', 'middle')
+      .attr('fill', '#333')
+      .text(function(d){
+        var t = d.title || d.id;
+        return t.split(' ').slice(0, 2).join(' ');
+      });
+
+  /* ── 9. LEGEND ───────────────────────────────────────────────────── */
+
+  var usedCats = Array.from(new Set(nodes.map(function(n){ return n.category; })));
+  var LEG_X = 12, LEG_Y = H() - usedCats.length * 18 - 10;
+  var leg = svg.append('g').attr('class', 'map-legend')
+               .attr('transform', 'translate('+LEG_X+','+LEG_Y+')');
+
+  usedCats.forEach(function(cat, i){
+    var g = leg.append('g').attr('transform', 'translate(0,'+(i * 18)+')');
+    g.append('circle').attr('cx', 6).attr('cy', 6).attr('r', 5)
+     .attr('fill', palFor(cat).fill)
+     .attr('stroke', '#000').attr('stroke-width', 1);
+    g.append('text').attr('x', 16).attr('y', 10)
+     .attr('fill', '#444').attr('font-size', '10px')
+     .attr('font-family', "'fabfont','DejaVu Sans Mono',monospace")
+     .text(cat);
+  });
+
+  /* ── 10. TOOLTIP ─────────────────────────────────────────────────── */
+
+  var tip = document.getElementById('map-tooltip');
+
+  node
+    .on('mouseenter', function(event, d){
+      tip.innerHTML = '<strong>' + esc(d.title) + '</strong>'
+        + '<br><span class="map-tooltip-cat">' + esc(d.category) + '</span>';
+      tip.style.display = 'block';
+      place(event);
+    })
+    .on('mousemove', place)
+    .on('mouseleave', function(){ tip.style.display = 'none'; });
+
+  function place(event) {
+    var r  = container.getBoundingClientRect();
+    var x  = event.clientX - r.left + 14;
+    var y  = event.clientY - r.top  - 10;
+    tip.style.left = Math.min(x, r.width  - tip.offsetWidth  - 8) + 'px';
+    tip.style.top  = Math.min(y, r.height - tip.offsetHeight - 8) + 'px';
+  }
+
+  function esc(s) {
+    return String(s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  /* ── 11. CLICK → NAVIGATE ────────────────────────────────────────── */
+
+  node.on('click', function(event, d){ if (d.url) window.location.href = d.url; });
+
+  /* ── 12. TICK ────────────────────────────────────────────────────── */
+
+  function pad(d) { return nodeR(d) + LABEL_Y + 12; }
+
+  sim.on('tick', function(){
+    nodes.forEach(function(d){
+      d.x = Math.max(nodeR(d), Math.min(W() - nodeR(d), d.x));
+      d.y = Math.max(nodeR(d), Math.min(H() - pad(d),   d.y));
+    });
+    link
+      .attr('x1', function(d){ return d.source.x; })
+      .attr('y1', function(d){ return d.source.y; })
+      .attr('x2', function(d){ return d.target.x; })
+      .attr('y2', function(d){ return d.target.y; });
+    node.attr('transform', function(d){ return 'translate('+d.x+','+d.y+')'; });
+  });
+
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    sim.on('tick')();
+  }
+
+  /* ── 13. DRAG ────────────────────────────────────────────────────── */
+
+  function drag(s) {
+    return d3.drag()
+      .on('start', function(e,d){ if (!e.active) s.alphaTarget(0.3).restart(); d.fx=d.x; d.fy=d.y; })
+      .on('drag',  function(e,d){ d.fx=e.x; d.fy=e.y; })
+      .on('end',   function(e,d){ if (!e.active) s.alphaTarget(0); d.fx=null; d.fy=null; });
+  }
+
+  /* ── 14. RESIZE ──────────────────────────────────────────────────── */
+
+  var rt;
+  window.addEventListener('resize', function(){
+    clearTimeout(rt);
+    rt = setTimeout(function(){
+      svg.attr('width', W()).attr('height', H());
+      /* Reposition legend */
+      var newY = H() - usedCats.length * 18 - 10;
+      svg.select('.map-legend').attr('transform','translate('+LEG_X+','+newY+')');
+      sim.force('center', d3.forceCenter(W()/2, H()/2)).alpha(0.3).restart();
+    }, 150);
+  });
+
+}());
+</script>

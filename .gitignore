@@ -1,7 +1,3 @@
-_site
-_layouts
-_includes
-assets
 .sass-cache
 .jekyll-cache
 .jekyll-metadata
@@ -9,14 +5,3 @@ vendor
 .claude
 .DS_Store
 Thumbs.db
-.ruby-lsp   
-_config.yml
-404.html
-about.markdown
-index.markdown
-map.markdown
-output.markdown
-rss.markdown
-Gemfile
-Gemfile.lock
-robots.txt

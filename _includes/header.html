@@ -1,0 +1,20 @@
+<div class="site-header">
+
+  <!--
+    site.title is "grεpsilon" — rendered exactly as typed.
+    No | upcase filter, no text-transform, so the ε reads as
+    the Greek epsilon character, not E.
+  -->
+  <a href="{{ '/' | relative_url }}" class="site-title">
+    {{ site.title }}<span class="cursor" aria-hidden="true">█</span>
+  </a>
+
+  <nav class="site-nav" aria-label="Site navigation">
+    <a href="{{ '/' | relative_url }}"                                    class="nav-link">~/home</a>
+    <a href="{{ '/output/' | relative_url }}"                             class="nav-link">~/output</a>
+    <a href="{{ '/about/' | relative_url }}"                              class="nav-link">~/about</a>
+    <a href="{{ '/map/' | relative_url }}"                               class="nav-link">~/map</a>
+    <a href="{{ '/rss/' | relative_url }}"                               class="nav-link">~/rss</a>
+  </nav>
+
+</div>

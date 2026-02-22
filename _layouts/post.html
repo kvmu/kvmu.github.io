@@ -1,0 +1,42 @@
+---
+layout: default
+---
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    renderMathInElement(document.body, {
+      delimiters: [
+        { left: "$$",  right: "$$",  display: true  },
+        { left: "\\[", right: "\\]", display: true  },
+        { left: "$",   right: "$",   display: false },
+        { left: "\\(", right: "\\)", display: false }
+      ]
+    });
+  });
+</script>
+
+<article class="post">
+
+  <h1>{{ page.title }}</h1>
+
+  {% include post-meta.html %}
+
+  {{ content }}
+
+  <hr>
+  <nav class="post-nav" style="display:flex; justify-content:space-between;">
+    <div class="prev">
+      {% if page.previous %}
+        &larr; <a href="{{ page.previous.url | relative_url }}">{{ page.previous.title }}</a>
+      {% endif %}
+    </div>
+    <div class="next" style="text-align:right;">
+      {% if page.next %}
+        <a href="{{ page.next.url | relative_url }}">{{ page.next.title }}</a> &rarr;
+      {% endif %}
+    </div>
+  </nav>
+
+</article>

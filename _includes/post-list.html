@@ -1,0 +1,31 @@
+{% assign posts_sorted = include.posts | default: site.posts | sort: "date" | reverse %}
+
+{% comment %}
+  Support an optional limit parameter: {% include post-list.html limit=3 %}
+  Uses slice (reliable across Liquid versions) rather than the `limit:` for-tag
+  which requires a literal, not a variable.
+{% endcomment %}
+{% if include.limit %}
+  {% assign posts_to_show = posts_sorted | slice: 0, include.limit %}
+{% else %}
+  {% assign posts_to_show = posts_sorted %}
+{% endif %}
+
+{% for post in posts_to_show %}
+<article class="post-card">
+
+  <div class="post-card-header">
+    <span class="post-date">{{ post.date | date: "%Y-%m-%d" }}</span>
+    <h2>
+      <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
+    </h2>
+  </div>
+
+  {% if post.excerpt %}
+  <p class="post-excerpt">
+    {{ post.excerpt | strip_html | truncatewords: 40 }}
+  </p>
+  {% endif %}
+
+</article>
+{% endfor %}

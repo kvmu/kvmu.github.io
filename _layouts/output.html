@@ -1,0 +1,18 @@
+---
+layout: default
+---
+<div class="heading">{{ page.title }}</div>
+<hr>
+
+{% assign grouped = site.posts | group_by_exp: 'post', 'post.date | date: "%Y"' %}
+{% assign grouped = grouped | sort: 'name' | reverse %}
+{% for year in grouped %}
+  <div class="output-year">{{ year.name }}</div>
+  {% assign posts_sorted = year.items | sort: "date" | reverse %}
+  {% for post in posts_sorted %}
+    <div class="output-row">
+      <span class="post-date">{{ post.date | date: "%Y-%m-%d" }}</span>
+      <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
+    </div>
+  {% endfor %}
+{% endfor %}
